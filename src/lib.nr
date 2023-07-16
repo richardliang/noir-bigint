@@ -369,11 +369,73 @@ impl BigUint56 {
         // Assume modulus is < (max bits / 2). 512 bit RSA needs 1024 limbs
         // TODO: add assert check
 
-        let (lo, _hi) = self.mul(other);
+        let (lo_unconstrained, _hi_unconstrained) = self.mul_unconstrained(other);
+        let (quo_unconstrained, rem_unconstrained) = lo_unconstrained.div_unconstrained(modulus);
 
-        let (_quo, rem) = lo.div(modulus);
+        // Assert `a * b = quo * n + rem`, i.e., `rem = (a * b) mod n`.
+        let (right, _hi_right) = quo_unconstrained.mul(modulus);
+        let out = right.add(rem_unconstrained);
 
-        rem
+        let (left, _hi_left) = self.mul(other);
+
+        assert(out.eq(left) == true);
+
+        rem_unconstrained
+    }
+
+    unconstrained fn mul_unconstrained(self: Self, other: Self) -> (Self, Self) {
+        let mut lo = BigUint56::zero();
+        let mut hi = BigUint56::zero();
+
+        for i in 0..NUM_LIMBS {
+            let mut carry = 0 as u56;
+
+            for j in 0..NUM_LIMBS {
+                let k = i + j;
+
+                if k as u56 >= NUM_LIMBS as u56 {
+                    let (n, c) = utils::mac(hi.limbs[k - NUM_LIMBS], self.limbs[i], other.limbs[j], carry);
+                    hi.limbs[k - NUM_LIMBS] = n;
+                    carry = c;
+                } else {
+                    let (n, c) = utils::mac(lo.limbs[k], self.limbs[i], other.limbs[j], carry);
+                    lo.limbs[k] = n;
+                    carry = c;
+                }
+            };
+
+            hi.limbs[i] = carry;
+        };
+
+        (lo, hi)
+    }
+    
+    unconstrained fn div_unconstrained(self: Self, other: Self) -> (Self, Self) {
+        assert(!other.is_zero());
+
+        if self.lt(other) {
+            (BigUint56::zero(), self)
+        } else {
+            let mut rem = self;
+            let mut quo = BigUint56::zero();
+
+            let bit_diff = self.nbits() - other.nbits();
+            let mut c = other.shl(bit_diff);
+
+            for i in 0..MAX_BITS+1 {
+                if i as u56 <= bit_diff {
+                    if rem.gte(c) {
+                        rem = rem.sub(c);
+                        quo = quo.shl1().add(BigUint56::one());
+                    } else {
+                        quo = quo.shl1();
+                    }
+                    c = c.shr1();
+                }
+            };
+
+            (quo, rem)
+        }
     }
 
     // Print as bytes
@@ -852,7 +914,7 @@ fn test_mul_mod1() {
 }
 
 #[test]
-fn test_mul_mod() {
+fn test_mul_mod2() {
     let a = BigUint56::from_bytes([1125899906842624]); // Max value in u56
     let b = BigUint56::from_bytes([1125899906842624]);
     let c = BigUint56::from_bytes([3]);
