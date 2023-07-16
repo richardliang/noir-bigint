@@ -366,7 +366,9 @@ impl BigUint56 {
     // Returns self * other % modulus.
     // This is the most naive way lol for hackathon purposes
     fn mul_mod(self: Self, other: Self, modulus: Self) -> Self {
-        // Assume modulus is < max bits)
+        // Assume modulus is < (max bits / 2). 512 bit RSA needs 1024 limbs
+        // TODO: add assert check
+
         let (lo, _hi) = self.mul(other);
 
         let (_quo, rem) = lo.div(modulus);
@@ -846,5 +848,17 @@ fn test_mul_mod1() {
 
     let d = a.mul_mod(b, c);
 
+    assert(d.eq(BigUint56::from_bytes([1])));
+}
+
+#[test]
+fn test_mul_mod() {
+    let a = BigUint56::from_bytes([1125899906842624]); // Max value in u56
+    let b = BigUint56::from_bytes([1125899906842624]);
+    let c = BigUint56::from_bytes([3]);
+
+    let d = a.mul_mod(b, c);
+
+    // Correct Mul_Mod
     assert(d.eq(BigUint56::from_bytes([1])));
 }
