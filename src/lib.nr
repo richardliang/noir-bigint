@@ -381,14 +381,14 @@ impl BigUint56 {
         rem
     }
 
-    // Returns self ^ e % modulus.
-    fn pow_mod(self: Self, e: Self, modulus: Self) -> Self {
+    // Returns self ^ 65537 % modulus.
+    fn pow_mod_65537(self: Self, modulus: Self) -> Self {
         
-        let e_bits = e.to_bits();
+        let e_bits = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];       // 65537
         let mut res = BigUint56::one();
         let mut pow = self;
 
-        for i in 0..4 {          // 65537 is just 16 bits
+        for i in 0..17 {          // 65537 is just 16 bits
             // let mut i = 0;
             // let bit = BigUint56::from_bytes([e_bits[i] as u8]);
             // let (term1, x) = res.mul_mod(res, modulus).mul(bit);  // (res * res) * bit
@@ -891,10 +891,9 @@ fn test_mul_mod1() {
 #[test]
 fn test_pow_mod1() {
     let a = BigUint56::from_bytes([2]);
-    let b = BigUint56::from_bytes([65537]);
-    let c = BigUint56::from_bytes([7]);
+    let c = BigUint56::from_bytes([5]);
 
-    let d = a.pow_mod(b, c);
+    let d = a.pow_mod_65537(c);
 
     d.println();
     // assert(d.eq(BigUint56::from_bytes([3])));
