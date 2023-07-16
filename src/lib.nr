@@ -385,16 +385,57 @@ impl BigUint56 {
     fn pow_mod(self: Self, e: Self, modulus: Self) -> Self {
         
         let e_bits = e.to_bits();
-        let mut res = self;
+        let mut res = BigUint56::one();
+        let mut pow = self;
 
         for i in 0..4 {          // 65537 is just 16 bits
+            // let mut i = 0;
+            // let bit = BigUint56::from_bytes([e_bits[i] as u8]);
+            // let (term1, x) = res.mul_mod(res, modulus).mul(bit);  // (res * res) * bit
+            // let (term2, y) = res.mul(BigUint56::one().sub(bit));    // res * (1 - bit)
 
-            let bit = BigUint56::from_bytes([e_bits[i] as u8]);
-            let (term1, x) = res.mul_mod(res, modulus).mul(bit);  // (res * res) * bit
-            let (term2, y) = res.mul(BigUint56::one().sub(bit));    // res * (1 - bit)
+            // res = term1.add(term2);
+            // res = res.square_mod(modulus);
 
-            res = term1.add(term2);
-            res = res.square_mod(modulus);
+            let mut bit = e_bits[i];
+            if 1 as u1 == bit {
+                res = res.mul_mod(pow, modulus);
+                println("res1");
+                res.println();
+            }         
+            pow = pow.square_mod(modulus);
+            println("res2");
+            res.println();
+
+            // i = 1;
+            // // let bit = BigUint56::from_bytes([e_bits[i] as u8]);
+            // // let (term1, x) = res.mul_mod(res, modulus).mul(bit);  // (res * res) * bit
+            // // let (term2, y) = res.mul(BigUint56::one().sub(bit));    // res * (1 - bit)
+
+            // // res = term1.add(term2);
+            // // res = res.square_mod(modulus);
+
+            // bit = e_bits[i];
+            // if 1 as u1 == bit {
+            //     res = res.mul_mod(res, modulus);
+            // }         
+            // res = res.square_mod(modulus);
+
+
+            // i = 3;
+            // // let bit = BigUint56::from_bytes([e_bits[i] as u8]);
+            // // let (term1, x) = res.mul_mod(res, modulus).mul(bit);  // (res * res) * bit
+            // // let (term2, y) = res.mul(BigUint56::one().sub(bit));    // res * (1 - bit)
+
+            // // res = term1.add(term2);
+            // // res = res.square_mod(modulus);
+
+            // bit = e_bits[i];
+            // if 1 as u1 == bit {
+            //     res = res.mul_mod(res, modulus);
+            // }         
+            // res = res.square_mod(modulus);
+
         }
         res
     }
@@ -878,8 +919,8 @@ fn test_mul_mod1() {
 #[test]
 fn test_pow_mod1() {
     let a = BigUint56::from_bytes([2]);
-    let b = BigUint56::from_bytes([4]);
-    let c = BigUint56::from_bytes([5]);
+    let b = BigUint56::from_bytes([65537]);
+    let c = BigUint56::from_bytes([7]);
 
     let d = a.pow_mod(b, c);
 
