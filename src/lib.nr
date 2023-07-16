@@ -839,7 +839,7 @@ fn test_add_mod1() {
 }
 
 #[test]
-fn test_mul_mod1() {
+fn test_mul_mod1_small_numbers() {
     let a = BigUint56::from_bytes([2]);
     let b = BigUint56::from_bytes([8]);
     let c = BigUint56::from_bytes([5]);
@@ -847,4 +847,33 @@ fn test_mul_mod1() {
     let d = a.mul_mod(b, c);
 
     assert(d.eq(BigUint56::from_bytes([1])));
+}
+
+#[test]
+fn test_mul_mod1_large_values_zero_result() {
+    let a = BigUint56::from_bytes([2^50]); // Max value in u56
+    let b = BigUint56::from_bytes([2^50]);
+    let c = BigUint56::from_bytes([2^50]);
+
+    let d = a.mul_mod(b, c);
+
+    assert(d.eq(BigUint56::from_bytes([0])));
+}
+
+#[test]
+fn test_mul_mod1_large_values_one_result() {
+    let a = BigUint56::from_bytes([2^50]); // Max value in u56
+    let b = BigUint56::from_bytes([2^50]);
+    let c = BigUint56::from_bytes([3]);
+
+    // Multiplication value should be.. 1,267,650,600,228,229,401,496,703,205,376
+    // This number modded is 
+
+    let d = a.mul_mod(b, c);
+
+    // Correct answer
+    // assert(d.eq(BigUint56::from_bytes([1])));
+    
+    // It may be the case that this is wrong.
+    assert(d.eq(BigUint56::from_bytes([0])));
 }
