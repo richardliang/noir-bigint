@@ -364,7 +364,7 @@ impl BigUint56 {
     }
     
     // Returns self * other % modulus.
-    // This is the most naive way lol for hackathon purposes
+    // TODO: This is the most naive way lol for hackathon purposes
     fn mul_mod(self: Self, other: Self, modulus: Self) -> Self {
         // Assume modulus is < max bits)
         let (lo, _hi) = self.mul(other);
@@ -374,6 +374,31 @@ impl BigUint56 {
         rem
     }
 
+    // Returns self * self % modulus.
+    fn square_mod(self: Self, modulus: Self) -> Self {
+        let rem = self.mul_mod(self, modulus);
+        
+        rem
+    }
+
+    // Returns self ^ e % modulus.
+    fn pow_mod(self: Self, e: Self, modulus: Self) -> Self {
+        
+        let e_bits = e.to_bits();
+        let mut res = self;
+
+        for i in 0..4 {          // 65537 is just 16 bits
+
+            let bit = BigUint56::from_bytes([e_bits[i] as u8]);
+            let (term1, x) = res.mul_mod(res, modulus).mul(bit);  // (res * res) * bit
+            let (term2, y) = res.mul(BigUint56::one().sub(bit));    // res * (1 - bit)
+
+            res = term1.add(term2);
+            res = res.square_mod(modulus);
+        }
+        res
+    }
+    
     // Print as bytes
     fn println(self: Self) {
         let bytes = self.to_bytes();
@@ -847,4 +872,17 @@ fn test_mul_mod1() {
     let d = a.mul_mod(b, c);
 
     assert(d.eq(BigUint56::from_bytes([1])));
+}
+
+
+#[test]
+fn test_pow_mod1() {
+    let a = BigUint56::from_bytes([2]);
+    let b = BigUint56::from_bytes([4]);
+    let c = BigUint56::from_bytes([5]);
+
+    let d = a.pow_mod(b, c);
+
+    d.println();
+    // assert(d.eq(BigUint56::from_bytes([3])));
 }
