@@ -365,7 +365,9 @@ impl BigUint56 {
     
     // Returns self * other % modulus.
     // TODO: Implement
-    // fn mul_mod(self: Self, other: Self, modulus: Self)
+    // fn mul_mod(self: Self, other: Self, modulus: Self) -> (Self, Self) {
+        
+    // }
 
     // Print as bytes
     fn println(self: Self) {
@@ -587,13 +589,13 @@ fn test_mul2() {
     assert(lo.eq(BigUint56::one()));
     assert(hi.eq(BigUint56{ limbs: [
         -2 as u56, -1 as u56, -1 as u56, -1 as u56, -1 as u56,
-        0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0,
-        0, 0
+        -1 as u56, -1 as u56, -1 as u56, -1 as u56, -1 as u56,
+        -1 as u56, -1 as u56, -1 as u56, -1 as u56, -1 as u56,
+        -1 as u56, -1 as u56, -1 as u56, -1 as u56, -1 as u56,
+        -1 as u56, -1 as u56, -1 as u56, -1 as u56, -1 as u56,
+        -1 as u56, -1 as u56, -1 as u56, -1 as u56, -1 as u56,
+        -1 as u56, -1 as u56, -1 as u56, -1 as u56, -1 as u56,
+        -1 as u56, -1 as u56
     ] }));
 }
 
