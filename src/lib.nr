@@ -400,42 +400,14 @@ impl BigUint56 {
             let mut bit = e_bits[i];
             if 1 as u1 == bit {
                 res = res.mul_mod(pow, modulus);
-                println("res1");
-                res.println();
             }         
             pow = pow.square_mod(modulus);
-            println("res2");
+            
+            println("res");
             res.println();
 
-            // i = 1;
-            // // let bit = BigUint56::from_bytes([e_bits[i] as u8]);
-            // // let (term1, x) = res.mul_mod(res, modulus).mul(bit);  // (res * res) * bit
-            // // let (term2, y) = res.mul(BigUint56::one().sub(bit));    // res * (1 - bit)
-
-            // // res = term1.add(term2);
-            // // res = res.square_mod(modulus);
-
-            // bit = e_bits[i];
-            // if 1 as u1 == bit {
-            //     res = res.mul_mod(res, modulus);
-            // }         
-            // res = res.square_mod(modulus);
-
-
-            // i = 3;
-            // // let bit = BigUint56::from_bytes([e_bits[i] as u8]);
-            // // let (term1, x) = res.mul_mod(res, modulus).mul(bit);  // (res * res) * bit
-            // // let (term2, y) = res.mul(BigUint56::one().sub(bit));    // res * (1 - bit)
-
-            // // res = term1.add(term2);
-            // // res = res.square_mod(modulus);
-
-            // bit = e_bits[i];
-            // if 1 as u1 == bit {
-            //     res = res.mul_mod(res, modulus);
-            // }         
-            // res = res.square_mod(modulus);
-
+            println("modulus");
+            modulus.println();
         }
         res
     }
