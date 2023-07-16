@@ -13,7 +13,7 @@ global NUM_LIMBS: comptime Field = 37;
 // Number of bytes per limb.
 global BYTES_PER_LIMB: comptime Field = 7; // BITS_PER_LIMB / 8
 // Maximum number of bits.
-global MAX_BITS: comptime Field = 280; // BITS_PER_LIMB * NUM_LIMBS
+global MAX_BITS: comptime Field = 2072; // BITS_PER_LIMB * NUM_LIMBS
 // Maximum number of bytes.
 global MAX_BYTES: comptime Field = 259; // NUM_LIMBS * BYTES_PER_LIMB
 
