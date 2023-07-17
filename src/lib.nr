@@ -311,6 +311,19 @@ impl BigUint56 {
         }
     }
 
+    fn rem_mod(self: Self, modulus: Self) -> Self {
+        assert(!modulus.is_zero());
+
+        let mut rem = self;
+        for _i in 0..MAX_BITS+1 {
+            if rem.gte(modulus) {
+                rem = rem.sub(modulus);
+            }
+        };
+
+        rem
+    }
+
     // Checks if self == other.
     fn eq(self: Self, other: Self) -> bool {
         let mut is_eq = true;
@@ -369,7 +382,7 @@ impl BigUint56 {
         // Assume modulus is < max bits)
         let (lo, _hi) = self.mul(other);
 
-        let (_quo, rem) = lo.div(modulus);
+        let rem = lo.rem_mod(modulus);
 
         rem
     }
@@ -382,32 +395,19 @@ impl BigUint56 {
     }
 
     // Returns self ^ 65537 % modulus.
-    fn pow_mod_65537(self: Self, modulus: Self) -> Self {
+    fn pow_mod(self: Self, e: Self, modulus: Self) -> Self {
         
-        let e_bits = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];       // 65537
+        let e_bits = e.to_bits();
         let mut res = BigUint56::one();
         let mut pow = self;
 
-        for i in 0..17 {          // 65537 is just 16 bits
-            // let mut i = 0;
-            // let bit = BigUint56::from_bytes([e_bits[i] as u8]);
-            // let (term1, x) = res.mul_mod(res, modulus).mul(bit);  // (res * res) * bit
-            // let (term2, y) = res.mul(BigUint56::one().sub(bit));    // res * (1 - bit)
-
-            // res = term1.add(term2);
-            // res = res.square_mod(modulus);
-
+        // Assume exponent is <17 bits for now (e.g. 65537)
+        for i in 0..17 {
             let mut bit = e_bits[i];
             if 1 as u1 == bit {
                 res = res.mul_mod(pow, modulus);
             }         
             pow = pow.square_mod(modulus);
-            
-            println("res");
-            res.println();
-
-            println("modulus");
-            modulus.println();
         }
         res
     }
@@ -887,14 +887,13 @@ fn test_mul_mod1() {
     assert(d.eq(BigUint56::from_bytes([1])));
 }
 
-
 #[test]
 fn test_pow_mod1() {
     let a = BigUint56::from_bytes([2]);
-    let c = BigUint56::from_bytes([5]);
+    let b = BigUint56::from_bytes([65537]);
+    let c = BigUint56::from_bytes([7]);
 
-    let d = a.pow_mod_65537(c);
+    let d = a.pow_mod(b, c);
 
-    d.println();
-    // assert(d.eq(BigUint56::from_bytes([3])));
+    assert(d.eq(BigUint56::from_bytes([4])));
 }
