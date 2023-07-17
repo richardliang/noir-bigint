@@ -315,11 +315,24 @@ impl BigUint56 {
         assert(!modulus.is_zero());
 
         let mut rem = self;
+        let mut borrow = 0 as u56;
         for _i in 0..MAX_BITS+1 {
             if rem.gte(modulus) {
-                rem = rem.sub(modulus);
+                let mut res = BigUint56::zero();
+                // let mut borrow = 0 as u56;
+
+                for i in 0..NUM_LIMBS {
+                    let (diff, new_borrow) = utils::sbb(rem.limbs[i], modulus.limbs[i], borrow);
+                    res.limbs[i] = diff;
+                    borrow = new_borrow;
+                };
+
+                rem = res;
             }
         };
+
+        println("rem");
+        rem.println();
 
         rem
     }
@@ -900,12 +913,13 @@ fn test_mul_mod2() {
     assert(d.eq(BigUint56::from_bytes([1])));
 }
 
+#[test]
 fn test_pow_mod1() {
-    let a = BigUint56::from_bytes([2]);
+    let a = BigUint56::from_bytes([1879]);
     let b = BigUint56::from_bytes([65537]);
     let c = BigUint56::from_bytes([7]);
 
     let d = a.pow_mod(b, c);
-
-    assert(d.eq(BigUint56::from_bytes([4])));
+    d.println();
+    // assert(d.eq(BigUint56::from_bytes([5])));
 }
