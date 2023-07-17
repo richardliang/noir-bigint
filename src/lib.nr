@@ -196,8 +196,6 @@ impl BigUint56 {
         (lo, hi)
     }
 
-
-
     // Performs left shift operation by `n` bits.
     // where `0 <= n < Limb::BITS`,
     // Returns the shifted number and the carry.
@@ -208,69 +206,13 @@ impl BigUint56 {
         let mut res = BigUint56::zero();
 
         let rshift = BITS_PER_LIMB as u56 - n;
-        
-        let two_pow_n = pow_56(2, n);
-        let two_pow_right_shift = pow_56(2, rshift);
-        
-        // let carry = self.limbs[NUM_LIMBS - 1] >> rshift;
-        let carry = (self.limbs[NUM_LIMBS - 1] / two_pow_right_shift);
+        let carry = self.limbs[NUM_LIMBS - 1] >> rshift;
 
-        // res.limbs[0] = pow_56(2, n) * self.limbs[0]; // | self.limbs[NUM_LIMBS - 1] >> rshift;
-        // for i in 1..NUM_LIMBS {
-        //     // res.limbs[i] = self.limbs[i] * 2^n | self.limbs[i - 1] / 2^rshift;
-        //     let a = (self.limbs[i] * two_pow_n);
-        //     let b = (self.limbs[i - 1] / two_pow_right_shift);
-        //     res.limbs[i] =  a | b;
-        // // BUG: Panics without this semi-colon.
-        // };
-        // UNROLL/
-        let mut a = (self.limbs[1] * two_pow_n);
-        let mut b = (self.limbs[1 - 1] / two_pow_right_shift);
-        res.limbs[1] =  a | b;
-        
-        a = (self.limbs[2] * two_pow_n);
-        b = (self.limbs[1] / two_pow_right_shift);
-        res.limbs[2] =  a | b;
-
-        a = (self.limbs[3] * two_pow_n);
-        b = (self.limbs[2] / two_pow_right_shift);
-        res.limbs[3] =  a | b;
-
-        a = (self.limbs[4] * two_pow_n);
-        b = (self.limbs[3] / two_pow_right_shift);
-        res.limbs[4] =  a | b;
-
-        a = (self.limbs[5] * two_pow_n);
-        b = (self.limbs[4] / two_pow_right_shift);
-        res.limbs[5] =  a | b;
-
-        a = (self.limbs[6] * two_pow_n);
-        b = (self.limbs[5] / two_pow_right_shift);
-        res.limbs[6] =  a | b;
-
-        a = (self.limbs[7] * two_pow_n);
-        b = (self.limbs[6] / two_pow_right_shift);
-        res.limbs[7] =  a | b;
-
-        a = (self.limbs[8] * two_pow_n);
-        b = (self.limbs[7] / two_pow_right_shift);
-        res.limbs[8] =  a | b;
-
-        a = (self.limbs[9] * two_pow_n);
-        b = (self.limbs[8] / two_pow_right_shift);
-        res.limbs[9] =  a | b;
-
-        // for i in 1..NUM_LIMBS {
-        //     // res.limbs[i] = self.limbs[i] * 2^n | self.limbs[i - 1] / 2^rshift;
-        //     let a = (self.limbs[i] * two_pow_n);
-        //     let b = (self.limbs[i - 1] / two_pow_right_shift);
-        //     res.limbs[i] =  a | b;
-        // // BUG: Panics without this semi-colon.
-        // };
-
-
-
-        // UNROLL
+        res.limbs[0] = self.limbs[0] << n;
+        for i in 1..NUM_LIMBS {
+            res.limbs[i] = (self.limbs[i] << n) | (self.limbs[i - 1] >> rshift);
+        // BUG: Panics without this semi-colon.
+        };
         (res, carry)
     }
 
