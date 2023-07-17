@@ -31,6 +31,18 @@ struct BigUint56 {
 //      limbs : [T; NUM_LIMBS],
 //  }
 
+fn pow_56(input : u56, exponent: u56) -> u56 {
+    let mut r: u56 = 1;
+    let b = (exponent as Field).to_le_bits(56);
+
+    for i in 1..57 {
+        r *= r;
+        r = (b[56-i] as u56) * (r * input) + (1 - b[56-i] as u56) * r;
+    }
+    r as u56
+}
+
+
 impl BigUint56 {
     // Returns zero as BigUint56.
     fn zero() -> Self {
@@ -168,6 +180,8 @@ impl BigUint56 {
         (lo, hi)
     }
 
+
+
     // Performs left shift operation by `n` bits.
     // where `0 <= n < Limb::BITS`,
     // Returns the shifted number and the carry.
@@ -178,13 +192,69 @@ impl BigUint56 {
         let mut res = BigUint56::zero();
 
         let rshift = BITS_PER_LIMB as u56 - n;
-        let carry = self.limbs[NUM_LIMBS - 1] >> rshift;
+        
+        let two_pow_n = pow_56(2, n);
+        let two_pow_right_shift = pow_56(2, rshift);
+        
+        // let carry = self.limbs[NUM_LIMBS - 1] >> rshift;
+        let carry = (self.limbs[NUM_LIMBS - 1] / two_pow_right_shift);
 
-        res.limbs[0] = self.limbs[0] << n;
-        for i in 1..NUM_LIMBS {
-            res.limbs[i] = (self.limbs[i] << n) | (self.limbs[i - 1] >> rshift);
-        // BUG: Panics without this semi-colon.
-        };
+        // res.limbs[0] = pow_56(2, n) * self.limbs[0]; // | self.limbs[NUM_LIMBS - 1] >> rshift;
+        // for i in 1..NUM_LIMBS {
+        //     // res.limbs[i] = self.limbs[i] * 2^n | self.limbs[i - 1] / 2^rshift;
+        //     let a = (self.limbs[i] * two_pow_n);
+        //     let b = (self.limbs[i - 1] / two_pow_right_shift);
+        //     res.limbs[i] =  a | b;
+        // // BUG: Panics without this semi-colon.
+        // };
+        // UNROLL/
+        let mut a = (self.limbs[1] * two_pow_n);
+        let mut b = (self.limbs[1 - 1] / two_pow_right_shift);
+        res.limbs[1] =  a | b;
+        
+        a = (self.limbs[2] * two_pow_n);
+        b = (self.limbs[1] / two_pow_right_shift);
+        res.limbs[2] =  a | b;
+
+        a = (self.limbs[3] * two_pow_n);
+        b = (self.limbs[2] / two_pow_right_shift);
+        res.limbs[3] =  a | b;
+
+        a = (self.limbs[4] * two_pow_n);
+        b = (self.limbs[3] / two_pow_right_shift);
+        res.limbs[4] =  a | b;
+
+        a = (self.limbs[5] * two_pow_n);
+        b = (self.limbs[4] / two_pow_right_shift);
+        res.limbs[5] =  a | b;
+
+        a = (self.limbs[6] * two_pow_n);
+        b = (self.limbs[5] / two_pow_right_shift);
+        res.limbs[6] =  a | b;
+
+        a = (self.limbs[7] * two_pow_n);
+        b = (self.limbs[6] / two_pow_right_shift);
+        res.limbs[7] =  a | b;
+
+        a = (self.limbs[8] * two_pow_n);
+        b = (self.limbs[7] / two_pow_right_shift);
+        res.limbs[8] =  a | b;
+
+        a = (self.limbs[9] * two_pow_n);
+        b = (self.limbs[8] / two_pow_right_shift);
+        res.limbs[9] =  a | b;
+
+        // for i in 1..NUM_LIMBS {
+        //     // res.limbs[i] = self.limbs[i] * 2^n | self.limbs[i - 1] / 2^rshift;
+        //     let a = (self.limbs[i] * two_pow_n);
+        //     let b = (self.limbs[i - 1] / two_pow_right_shift);
+        //     res.limbs[i] =  a | b;
+        // // BUG: Panics without this semi-colon.
+        // };
+
+
+
+        // UNROLL
         (res, carry)
     }
 
@@ -315,7 +385,7 @@ impl BigUint56 {
 
         let mut rem = self;
         let bit_diff = self.nbits() - modulus.nbits();
-        let mut c = modulus.shl(bit_diff);
+        let mut c = modulus.shl(bit_diff);          // Risky line
 
         for i in 0..MAX_BITS+1 {
             if i as u56 <= bit_diff {
@@ -363,6 +433,22 @@ impl BigUint56 {
     fn is_zero(self: Self) -> bool {
         self.eq(BigUint56::zero())
     }
+
+    // Exponentiates `self` by `by`.
+    // Double-and-add algorithm
+    // fn pow(self: Self, by: BigUint56) -> Self {
+    //     let mut res = PrimeField::one();
+    //     for i in 0..NUM_LIMBS {
+    //         for j in 0..BITS_PER_LIMB {
+    //             res = res.square();
+                
+    //             if ((by.limbs[NUM_LIMBS - i - 1] >> ((BITS_PER_LIMB - j - 1) as u56)) & 1) == 1 {
+    //                 res = res.mul(self);
+    //             }
+    //         }
+    //     }
+    //     res
+    // }
 
     // Returns self + other % modulus.
     // Assumes `self + other` as unbounded integer is `< 2*modulus`.
@@ -436,7 +522,8 @@ impl BigUint56 {
         // res
         pow2
     }
-    
+
+
     // Print as bytes
     fn println(self: Self) {
         let bytes = self.to_bytes();
@@ -946,3 +1033,14 @@ fn test_pow_mod1() {
 }
 
 
+#[test]
+fn test_pow_u56() {
+    let a: u56 = 2;
+    let b: u56 = 3;
+
+    let c = pow_56(a, b);
+
+    println(c);
+    assert(c == 8);
+
+}
