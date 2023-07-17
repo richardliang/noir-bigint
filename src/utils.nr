@@ -18,3 +18,16 @@ fn mac(a: u56, b: u56, c: u56, carry: u56) -> (u56, u56) {
     let ret = (a as Field) + ((b as Field) * (c as Field)) + (carry as Field);
     (ret as u56, (ret as u112 >> BITS as u112) as u56)
 }
+
+fn pow_56(input : u56, exponent: u56) -> u56 {
+    let mut r: u56 = 1;
+    let b = (exponent as Field).to_le_bits(56);
+
+    for i in 1..57 {
+        r *= r;
+        r = (b[56-i] as u56) * (r * input) + (1 - b[56-i] as u56) * r;
+    }
+    r as u56
+}
+
+
