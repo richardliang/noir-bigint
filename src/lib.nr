@@ -379,6 +379,7 @@ impl BigUint56 {
     // Returns self * other % modulus.
     // TODO: This is the most naive way lol for hackathon purposes
     fn mul_mod(self: Self, other: Self, modulus: Self) -> Self {
+        // TODO: Add assert check
         // Assume modulus is < max bits)
         let (lo, _hi) = self.mul(other);
 
@@ -888,6 +889,17 @@ fn test_mul_mod1() {
 }
 
 #[test]
+fn test_mul_mod2() {
+    let a = BigUint56::from_bytes([1125899906842624]); // Max value in u56
+    let b = BigUint56::from_bytes([1125899906842624]);
+    let c = BigUint56::from_bytes([3]);
+
+    let d = a.mul_mod(b, c);
+
+    // Correct Mul_Mod
+    assert(d.eq(BigUint56::from_bytes([1])));
+}
+
 fn test_pow_mod1() {
     let a = BigUint56::from_bytes([2]);
     let b = BigUint56::from_bytes([65537]);
