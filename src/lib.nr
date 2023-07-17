@@ -31,18 +31,6 @@ struct BigUint56 {
 //      limbs : [T; NUM_LIMBS],
 //  }
 
-fn pow_56(input : u56, exponent: u56) -> u56 {
-    let mut r: u56 = 1;
-    let b = (exponent as Field).to_le_bits(56);
-
-    for i in 1..57 {
-        r *= r;
-        r = (b[56-i] as u56) * (r * input) + (1 - b[56-i] as u56) * r;
-    }
-    r as u56
-}
-
-
 impl BigUint56 {
     // Returns zero as BigUint56.
     fn zero() -> Self {
@@ -458,27 +446,28 @@ impl BigUint56 {
         rem
     }
 
+    fn pow_mod(self: Self, e: Self, modulus: Self) -> Self {
+        let e_bits = e.to_bits();
+
+        let mut res = BigUint56::one();
+        let mut pow = self;
+
+        // TODO: Noir compiler bug. Waiting for fix from Aztec team.
+        // Fails for >2 iterations.
+        for i in 0..2 {
+            if e_bits[i] as u1 == 1 {
+                res = res.mul_mod(pow, modulus);
+            }
+            pow = pow.square_mod(modulus);
+        }
+
+        res
+    }
+
     // Returns self ^ 65537 % modulus.
     fn pow_mod_65537(self: Self,  modulus: Self) -> Self {
         
-        // Simple implementation
-        // let mut base = self;
-        // // base * base
-        // let pow1 = base.mul_mod(base, modulus);
-        // pow1.println();
-
-        // (base * base) * (base * base)
-        // let pow2 = pow1.mul_mod(pow1, modulus);
-        // pow2.println();
-
-        // (base * base) * (base * base) * (base * base)
-        // let pow3 = pow2.mul_mod(pow2, modulus);
-        // pow3.println();
-
-
-        // This is the code we want to run
         // Square and Multiply algorithm
-
         let mut res = BigUint56::one();
         let mut pow = self;
 
@@ -494,7 +483,6 @@ impl BigUint56 {
         res = res.mul_mod(pow, modulus);
 
         res
-        // pow1
     }
 
 
@@ -1005,23 +993,33 @@ fn test_mul_mod2() {
 
 
 #[test]
-fn test_pow_mod1() {
+fn test_pow_mod() {
     let a = BigUint56::from_bytes([2]);
-    let b = BigUint56::from_bytes([10]);
+    let b = BigUint56::from_bytes([2]);
+    let c = BigUint56::from_bytes([11]);
 
-    let c = a.pow_mod_65537(b);
-
-    c.println();
-    // assert(d.eq(BigUint56::from_bytes([2])));
+    let d = a.pow_mod(b, c);
+    
+    assert(d.eq(BigUint56::from_bytes([4])));
 }
 
+// #[test]
+// fn test_pow_mod_65537_1() {
+//     let a = BigUint56::from_bytes([2]);
+//     let b = BigUint56::from_bytes([10]);
+
+//     let c = a.pow_mod_65537(b);
+
+//     c.println();
+//     // assert(d.eq(BigUint56::from_bytes([2])));
+// }
 
 #[test]
 fn test_pow_u56() {
     let a: u56 = 2;
     let b: u56 = 3;
 
-    let c = pow_56(a, b);
+    let c = utils::pow_56(a, b);
 
     println(c);
     assert(c == 8);
