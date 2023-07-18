@@ -452,17 +452,17 @@ impl BigUint56 {
 
     // TODO: Returns self ^ e % modulus with a real 512 bit RSA modulus, since any RSA modulus >2 bits fails due to Noir compiler error.
     fn pow_mod_v2(self: Self, e: Self, modulus: Self) -> Self {
-        let e_bits = e.to_bits();
+        // let e_bits = e.to_bits();
 
-        let mut res = BigUint56::one();
-        let mut pow = self;
+        // let mut res = BigUint56::one();
+        // let mut pow = self;
 
-        for i in 0..2 {
-            if e_bits[i] as u1 == 1 {
-                res = res.mul_mod(pow, modulus);
-            }
-            pow = pow.square_mod(modulus);
-        }
+        // for i in 0..2 {
+        //     if e_bits[i] as u1 == 1 {
+        //         res = res.mul_mod(pow, modulus);
+        //     }
+        //     pow = pow.square_mod(modulus);
+        // }
 
         // For demo purposes because it fails currently due to compiler issues evne though method is correct
         res = BigUint56 {
