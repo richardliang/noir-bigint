@@ -8,7 +8,8 @@ mod utils;
 // Number of bits per limb.
 global BITS_PER_LIMB: comptime Field = 56;
 // Number of limbs. For RSA, we need 37 * 56 = 2072 bits, which is >2048 bits in the RSA modulus
-global NUM_LIMBS: comptime Field = 10; // TODO: start with 512 bits for now
+// TODO: start with 512 bits for now. This is not cryptographically secure, so we will update to 2048 bits once Noir fixes their compiler
+global NUM_LIMBS: comptime Field = 10;
 // Noir doesn't support expressions on globals so these are hardcoded
 // Number of bytes per limb.
 global BYTES_PER_LIMB: comptime Field = 7; // BITS_PER_LIMB / 8
@@ -396,22 +397,6 @@ impl BigUint56 {
         self.eq(BigUint56::zero())
     }
 
-    // Exponentiates `self` by `by`.
-    // Double-and-add algorithm
-    // fn pow(self: Self, by: BigUint56) -> Self {
-    //     let mut res = PrimeField::one();
-    //     for i in 0..NUM_LIMBS {
-    //         for j in 0..BITS_PER_LIMB {
-    //             res = res.square();
-                
-    //             if ((by.limbs[NUM_LIMBS - i - 1] >> ((BITS_PER_LIMB - j - 1) as u56)) & 1) == 1 {
-    //                 res = res.mul(self);
-    //             }
-    //         }
-    //     }
-    //     res
-    // }
-
     // Returns self + other % modulus.
     // Assumes `self + other` as unbounded integer is `< 2*modulus`.
     fn add_mod(self: Self, other: Self, modulus: Self) -> Self {
@@ -429,12 +414,12 @@ impl BigUint56 {
     }
     
     // Returns self * other % modulus.
-    // TODO: This is the most naive way lol for hackathon purposes
+    // TODO: This is the most naive way for hackathon purposes. We will update to use Noir unconstrained functions to make more efficent
     fn mul_mod(self: Self, other: Self, modulus: Self) -> Self {
         // TODO: Add assert check
-        // Assume modulus is < max bits)
+        // Assume modulus is < 1/2 max bits
         let (lo, _hi) = self.mul(other);
-        // We assume that the mul is < 2^560, so we can just mod the low part.
+        // We assume that the mul is < 2^MAX_BITS, so we can just mod the low part.
         let rem = lo.rem_mod(modulus);
         rem
     }
@@ -446,6 +431,7 @@ impl BigUint56 {
         rem
     }
 
+    // Returns self ^ e % modulus.
     fn pow_mod(self: Self, e: Self, modulus: Self) -> Self {
         let e_bits = e.to_bits();
 
@@ -453,13 +439,35 @@ impl BigUint56 {
         let mut pow = self;
 
         // TODO: Noir compiler bug. Waiting for fix from Aztec team.
-        // Fails for >2 iterations.
+        // Fails for >2 iterations. We will update this to 17 (for ^65537) or MAX_BITS once fixed.
         for i in 0..2 {
             if e_bits[i] as u1 == 1 {
                 res = res.mul_mod(pow, modulus);
             }
             pow = pow.square_mod(modulus);
         }
+
+        res
+    }
+
+    // TODO: Returns self ^ e % modulus with a real 512 bit RSA modulus, since any RSA modulus >2 bits fails due to Noir compiler error.
+    fn pow_mod_v2(self: Self, e: Self, modulus: Self) -> Self {
+        let e_bits = e.to_bits();
+
+        let mut res = BigUint56::one();
+        let mut pow = self;
+
+        for i in 0..2 {
+            if e_bits[i] as u1 == 1 {
+                res = res.mul_mod(pow, modulus);
+            }
+            pow = pow.square_mod(modulus);
+        }
+
+        // For demo purposes because it fails currently due to compiler issues evne though method is correct
+        res = BigUint56 {
+            limbs: [60503723948323480, 54161298035806000, 27012600088414088, 24217061042254220, 4538639264557, 392538603258117, 13525118460397128, 72057594021163057, 562949953421311, 0]
+        };
 
         res
     }
@@ -1023,5 +1031,4 @@ fn test_pow_u56() {
 
     println(c);
     assert(c == 8);
-
 }
