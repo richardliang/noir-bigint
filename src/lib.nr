@@ -454,7 +454,7 @@ impl BigUint56 {
     fn pow_mod_v2(self: Self, e: Self, modulus: Self) -> Self {
         // let e_bits = e.to_bits();
 
-        // let mut res = BigUint56::one();
+        let mut res = BigUint56::one();
         // let mut pow = self;
 
         // for i in 0..2 {
